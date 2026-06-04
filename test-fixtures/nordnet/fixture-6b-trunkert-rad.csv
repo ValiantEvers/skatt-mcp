@@ -1,0 +1,3 @@
+Id	Bokføringsdag	Handelsdag	Oppgjørsdag	Portefølje	Transaksjonstype	Verdipapir	ISIN	Antall	Kurs	Rente	Totale Avgifter	Valuta	Beløp	Valuta	Kjøpsverdi	Valuta	Resultat	Valuta	Totalt antall	Saldo	Vekslingskurs	Transaksjonstekst	Makuleringsdato	Sluttseddelnummer	Verifikationsnummer	Kurtasje	Valuta	Valutakurs	Innledende rente
+6001	2025-01-15	2025-01-15	2025-01-17	999	KJØPT	Equinor	NO0010096985	100	280		29	NOK	-28029	NOK	28000	NOK	0	NOK	100	0	1	Kjøp Equinor		F001	F002	29	NOK	1	0
+6002	2025-02-15	Equinor

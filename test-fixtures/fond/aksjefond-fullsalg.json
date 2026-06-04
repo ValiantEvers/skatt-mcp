@@ -1,0 +1,55 @@
+{
+  "navn": "Aksjefond fullsalg (identitetstest mot dagens fond.ts)",
+  "beskrivelse": "Rent aksjefond, ingen prior lots, kjøp+salg innen rapporteringsåret. Inngangs-carry og default aksjeandel 1.0 brukes for å matche dagens fond.ts numerisk.",
+  "klassifisering": {
+    "navn": "Test Aksjefond",
+    "type": "aksjefond"
+  },
+  "ny_input": {
+    "transaksjoner": [
+      {
+        "isin": "NO0099999991",
+        "type": "kjøp",
+        "dato": "2025-01-15",
+        "antall": 100,
+        "pris_per_andel": 1000,
+        "tegnings_innloesningsgebyr": 0
+      },
+      {
+        "isin": "NO0099999991",
+        "type": "salg",
+        "dato": "2025-12-10",
+        "antall": 100,
+        "pris_per_andel": 1500,
+        "tegnings_innloesningsgebyr": 0
+      }
+    ],
+    "inngangs_carry_per_isin": [
+      {
+        "isin": "NO0099999991",
+        "akkumulert_ubrukt_skjerming_inngaaende": 5000
+      }
+    ],
+    "rapporteringsaar": 2025
+  },
+  "gamle_input": {
+    "kostpris": 100000,
+    "salgssum": 150000,
+    "aksjeandel_kjøpsår": 1.0,
+    "aksjeandel_salgsår": 1.0,
+    "akkumulert_ubrukt_skjerming": 5000,
+    "rapporteringsaar": 2025
+  },
+  "forventet": {
+    "gevinst": 50000,
+    "aksjedel": 50000,
+    "rentedel": 0,
+    "brukt_skjerming": 5000,
+    "aksjedel_etter_skjerming": 45000,
+    "oppjustert_aksjedel": 77400,
+    "skatt_aksjedel": 17028,
+    "skatt_rentedel": 0,
+    "total_skatt": 17028,
+    "bortfalt_skjerming": 0
+  }
+}

@@ -1,0 +1,118 @@
+{
+  "_meta": {
+    "år": 2025,
+    "kilder": [
+      "Skatteetaten — Forskuddsmeldingen 2025 (https://www.skatteetaten.no/rettskilder/type/skattedirektoratets-meldinger/forskuddsmeldingen-2025/)",
+      "Stortingets skattevedtak for inntektsåret 2025",
+      "Skatteetaten — Verdsettingsrabatter ved formuesfastsetting",
+      "Skatteetaten — Skjermingsrente for aksjer og enkeltpersonforetak (https://www.skatteetaten.no/satser/skjermingsrente-for-aksjer-og-enkeltpersonforetak/)"
+    ],
+    "hentet": "2026-05-09",
+    "merknad": "Standard reelle tilfeller. Ikke ektefelle-felles, ikke Finnmark/Troms, ikke klasse 0, ikke særfradrag."
+  },
+
+  "alminnelig_inntektsskatt": {
+    "sats": 0.22,
+    "merknad": "Gjelder personer og bedrifter"
+  },
+
+  "trinnskatt": [
+    { "innslagspunkt": 217400, "sats": 0.017 },
+    { "innslagspunkt": 306050, "sats": 0.040 },
+    { "innslagspunkt": 697150, "sats": 0.137 },
+    { "innslagspunkt": 942400, "sats": 0.167 },
+    { "innslagspunkt": 1410750, "sats": 0.177 }
+  ],
+
+  "trygdeavgift": {
+    "nedre_grense": 99650,
+    "satser": {
+      "lønn": 0.077,
+      "pensjon": 0.051,
+      "næring": 0.109
+    },
+    "tjuefem_prosent_regel": 0.25,
+    "merknad": "Trygdeavgift skal ikke overstige 25 % av (personinntekt − nedre_grense). Glatter overgangen rett over nedre grense."
+  },
+
+  "personfradrag": {
+    "klasse_1": 108550
+  },
+
+  "minstefradrag": {
+    "lønn": { "sats": 0.46, "maks": 92000 },
+    "pensjon": { "sats": 0.40, "maks": 73150 }
+  },
+
+  "formuesskatt": {
+    "bunnfradrag_enslig": 1760000,
+    "bunnfradrag_ektefeller": 3520000,
+    "kommunal_sats": 0.00525,
+    "statlig_trinn1_sats": 0.00475,
+    "statlig_trinn2_innslag": 20700000,
+    "statlig_trinn2_sats": 0.00575
+  },
+
+  "verdsettingsrabatter": {
+    "primærbolig": {
+      "verdsetting_opp_til_10M": 0.25,
+      "verdsetting_over_10M": 0.70,
+      "merknad": "Markedsverdi × 0,25 for de første 10 M, × 0,70 for det som er over"
+    },
+    "sekundærbolig": { "verdsetting": 1.00 },
+    "fritidsbolig": {
+      "verdsetting": 0.30,
+      "merknad": "Forenklet: 30 % av markedsverdi. I virkeligheten basert på historisk byggekostnad — for vår breadth-shallow scope holder 30 % som default."
+    },
+    "aksjer_aksjefond": {
+      "verdsetting": 0.80,
+      "gjeldsreduksjon": 0.20,
+      "merknad": "20 % rabatt på verdi OG på tilordnet gjeld"
+    },
+    "ASK_aksjesparekonto": {
+      "verdsetting": 0.80,
+      "gjeldsreduksjon": 0.20,
+      "merknad": "Behandles som vanlige aksjer for formuesverdsetting"
+    },
+    "driftsmidler": {
+      "verdsetting": 0.70,
+      "gjeldsreduksjon": 0.30
+    },
+    "bankinnskudd": { "verdsetting": 1.00 },
+    "krypto": { "verdsetting": 1.00 }
+  },
+
+  "BSU": {
+    "skattefradrag_sats": 0.10,
+    "maks_årlig_innskudd": 27500,
+    "maks_total_saldo": 300000,
+    "krav": "Ikke eie primær- eller sekundærbolig per 31.12. Aldersgrense: t.o.m. året man fyller 33."
+  },
+
+  "foreldrefradrag": {
+    "første_barn": 25000,
+    "hvert_ekstra_barn": 15000,
+    "aldersgrense_barn": 12
+  },
+
+  "reisefradrag": {
+    "sats_per_km": 1.83,
+    "egenandel": 14950,
+    "merknad": "Fradraget gis bare for det som overstiger egenandelen"
+  },
+
+  "fagforeningskontingent": {
+    "maks": 8250
+  },
+
+  "aksjeoppjustering": {
+    "faktor": 1.72,
+    "merknad": "Anvendes på utbytte og gevinst på aksjer/aksjefond. Gir effektiv sats 22 % × 1,72 = 37,84 %."
+  },
+
+  "skjermingsrente": {
+    "personlige_aksjonærer": 0.036,
+    "merknad": "Fastsatt av Skattedirektoratet i januar 2026 for inntektsåret 2025. Beregnet fra gjennomsnittlig 3-mnd statskasseveksel-rente i 2025 (4,1480 %) tillagt 0,5 pp, nedjustert med 22 % alminnelig inntekt, avrundet til nærmeste 0,1 pp.",
+    "kilde": "https://www.skatteetaten.no/satser/skjermingsrente-for-aksjer-og-enkeltpersonforetak/"
+  }
+}

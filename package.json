@@ -1,0 +1,46 @@
+{
+  "name": "skatt-mcp",
+  "version": "0.0.1",
+  "description": "Personlig MCP-server for norske skatteberegninger",
+  "type": "module",
+  "license": "MIT",
+  "author": "Valiant Evers",
+  "homepage": "https://github.com/ValiantEvers/skatt-mcp#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ValiantEvers/skatt-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ValiantEvers/skatt-mcp/issues"
+  },
+  "keywords": [
+    "mcp",
+    "skatt",
+    "norge",
+    "claude",
+    "model-context-protocol"
+  ],
+  "bin": {
+    "skatt-mcp": "dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/server.ts",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "pretest": "npm run build",
+    "test": "node scripts/test-nordnet-parser.mjs && node scripts/identity-test-fond.mjs && node scripts/test-skatteoppgjoer.mjs && node scripts/test-nordnet-e2e.mjs && node scripts/test-krypto.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

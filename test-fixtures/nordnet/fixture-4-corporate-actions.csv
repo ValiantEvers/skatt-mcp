@@ -1,0 +1,5 @@
+Id	Bokføringsdag	Handelsdag	Oppgjørsdag	Portefølje	Transaksjonstype	Verdipapir	ISIN	Antall	Kurs	Rente	Totale Avgifter	Valuta	Beløp	Valuta	Kjøpsverdi	Valuta	Resultat	Valuta	Totalt antall	Saldo	Vekslingskurs	Transaksjonstekst	Makuleringsdato	Sluttseddelnummer	Verifikationsnummer	Kurtasje	Valuta	Valutakurs	Innledende rente
+4001	2025-01-15	2025-01-15	2025-01-17	999	KJØPT	Kongsberg Automotive	NO0003035305	1000	5		29	NOK	-5029	NOK	5000	NOK	0	NOK	1000	0	1	Kjøp KOA		D001	D002	29	NOK	1	0
+4002	2025-02-03	2025-02-03	2025-02-05	999	SPLITT UTTAK VP	Kongsberg Automotive	NO0003035305	1000	0				0	NOK								Splitt 10 KOA til 1 KOA		D003	D004				
+4003	2025-03-01	2025-03-01	2025-03-03	999	BYTTE INNLEGG VP	ODIN Global D NOK	NO0010876097	9,8998					0	NOK	2000	NOK						Andelsklassbyte Odin - Ratio: 1;1,797720728		D005	D006				
+4004	2025-04-15	2025-04-15	2025-04-17	999	REINVESTERT UTBYTTE	Equinor	NO0010096985	5	280				0	NOK							1	DRIP		D007	D008				

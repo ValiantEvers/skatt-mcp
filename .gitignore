@@ -1,0 +1,23 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+.env
+.env.local
+data/lovdata-cache/
+
+# CSV-beskyttelse: ekte finansdata skal aldri committes
+*.csv
+!test-fixtures/**/*.csv
+
+# Draft-klassifisering generert fra ekte eksporter (skal aldri committes)
+src/data/fond-klassifisering.draft.json
+
+# Test-utdata fra scripts/ (genererte før/etter-snapshot for identitetstest osv.)
+scripts/before-*.txt
+scripts/after-*.txt
+scripts/after-fixes-*.txt
+scripts/krypto-*.txt
+
+# Lokal Claude Code-config (maskinspesifikk, skal ikke committes)
+.claude/settings.local.json

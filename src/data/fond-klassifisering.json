@@ -1,0 +1,74 @@
+{
+  "FI0008813282": {
+    "navn": "Nordea Asian Stars Fund A NOK",
+    "tick_navn": "Nordea Asian Stars Fund A NOK",
+    "type": "aksjefond",
+    "regel": "aksjefond:Fund"
+  },
+  "IE000480NS87": {
+    "navn": "Nordnet Global Indeks 125 NOK",
+    "tick_navn": "Nordnet Global Indeks 125 NOK",
+    "type": "aksjefond",
+    "regel": "aksjefond:Indeks"
+  },
+  "IE00BMTD2S51": {
+    "navn": "Nordnet Emerging Markets Indeks",
+    "tick_navn": "Nordnet Emerging Markets Indeks",
+    "type": "aksjefond",
+    "regel": "aksjefond:Indeks"
+  },
+  "IE00BMTD2X05": {
+    "navn": "Nordnet USA Indeks NOK",
+    "tick_navn": "Nordnet USA Indeks NOK",
+    "type": "aksjefond",
+    "regel": "aksjefond:Indeks"
+  },
+  "LU1923202326": {
+    "navn": "Sissener Corporate Bond R NOK",
+    "tick_navn": "Sissener Corporate Bond R NOK",
+    "type": "rentefond",
+    "regel": "rentefond:Bond"
+  },
+  "NO0010096985": {
+    "navn": "Equinor",
+    "tick_navn": "EQNR",
+    "type": "aksje",
+    "regel": "aksje:ticker-regex"
+  },
+  "NO0010337959": {
+    "navn": "DNB USA Indeks A",
+    "tick_navn": "DNB USA Indeks A",
+    "type": "aksjefond",
+    "regel": "aksjefond:Indeks"
+  },
+  "NO0010582984": {
+    "navn": "DNB Global Indeks A",
+    "tick_navn": "DNB Global Indeks A",
+    "type": "aksjefond",
+    "regel": "aksjefond:Indeks"
+  },
+  "NO0010668106": {
+    "navn": "Alfred Berg Nordic High Yield R (NOK)",
+    "tick_navn": "Alfred Berg Nordic High Yield R (NOK)",
+    "type": "rentefond",
+    "regel": "rentefond:High Yield"
+  },
+  "NO0012445362": {
+    "navn": "KLP AksjeAsia Indeks N",
+    "tick_navn": "KLP AksjeAsia Indeks N",
+    "type": "aksjefond",
+    "regel": "aksjefond:Indeks"
+  },
+  "NO0012445818": {
+    "navn": "KLP Likviditet N",
+    "tick_navn": "KLP Likviditet N",
+    "type": "rentefond",
+    "regel": "rentefond:Likviditet"
+  },
+  "SE0011309699": {
+    "navn": "Handelsbanken Global Index (A1 NOK)",
+    "tick_navn": "Handelsbanken Global Index (A1 NOK)",
+    "type": "aksjefond",
+    "regel": "aksjefond:Index"
+  }
+}
