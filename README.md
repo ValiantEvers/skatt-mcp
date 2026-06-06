@@ -1,5 +1,7 @@
 # skatt-mcp
 
+[![CI](https://github.com/ValiantEvers/skatt-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ValiantEvers/skatt-mcp/actions/workflows/ci.yml)
+
 En lokal [MCP](https://modelcontextprotocol.io)-server som lar Claude svare på norske
 skattespørsmål med **faktiske beregninger** i stedet for generelle forklaringer — f.eks.
 «hvor mye skatt skylder jeg på denne aksjegevinsten?» eller «hva blir formuesskatten min
