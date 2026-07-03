@@ -404,10 +404,13 @@ export function registerAksjeVerktøy(server: McpServer): void {
         const skjermingsgrunnlag =
           h.total_kostbase + h.akkumulert_ubrukt_skjerming;
         const åresSkjerming = skjermingsgrunnlag * skjermingsrente;
-        const bruktSkjerming = Math.min(åresSkjerming, sumUtbytte);
-        const ubruktDette = åresSkjerming - bruktSkjerming;
-        const nyAkkumulert = h.akkumulert_ubrukt_skjerming + ubruktDette;
-        const skattepliktig = Math.max(0, sumUtbytte - åresSkjerming);
+        // § 10-12: akkumulert ubrukt skjerming fra tidligere år er også
+        // fradragsberettiget mot årets utbytte — samme pool-modell som
+        // ask.ts og fond.ts.
+        const totalDisponibel = h.akkumulert_ubrukt_skjerming + åresSkjerming;
+        const bruktSkjerming = Math.min(totalDisponibel, sumUtbytte);
+        const skattepliktig = sumUtbytte - bruktSkjerming;
+        const nyAkkumulert = totalDisponibel - bruktSkjerming;
 
         totalSkjerming += åresSkjerming;
         totalSkattepliktig += skattepliktig;
@@ -416,9 +419,9 @@ export function registerAksjeVerktøy(server: McpServer): void {
           `  ${h.ticker} — ${h.antall_aksjer_31_12} aksjer eid 31.12`,
           `    Skjermingsgrunnlag:        ${formaterKrDesimal(skjermingsgrunnlag).padStart(12)}  (kostbase ${formaterKr(h.total_kostbase)} + akkumulert ${formaterKr(h.akkumulert_ubrukt_skjerming)})`,
           `    Årets skjerming:           ${formaterKrDesimal(åresSkjerming).padStart(12)}  (${formaterKr(skjermingsgrunnlag)} × ${renteProsent} %)`,
+          `    Total disponibel:          ${formaterKrDesimal(totalDisponibel).padStart(12)}  (akkumulert ${formaterKr(h.akkumulert_ubrukt_skjerming)} + årets)`,
           `    Utbytte mottatt:           ${formaterKrDesimal(sumUtbytte).padStart(12)}`,
           `    Brukt skjerming:           ${formaterKrDesimal(bruktSkjerming).padStart(12)}`,
-          `    Ubrukt dette år:           ${formaterKrDesimal(ubruktDette).padStart(12)}`,
           `    Ny akkumulert ubrukt:      ${formaterKrDesimal(nyAkkumulert).padStart(12)}`,
           `    Skattepliktig utbytte:     ${formaterKrDesimal(skattepliktig).padStart(12)}`,
           ``

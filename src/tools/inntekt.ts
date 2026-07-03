@@ -151,13 +151,20 @@ export function registerInntektsskattVerktøy(server: McpServer): void {
             : ` (${formaterProsent(s.minstefradrag.pensjon.sats)} av brutto)`;
       }
 
-      // 2. Reisefradrag (km er én vei, ganger 2 for tur/retur)
+      // 2. Reisefradrag (km er én vei, ganger 2 for tur/retur;
+      //    kappet på maks per sktl. § 6-44)
       let reisefradrag = 0;
       let reiseBrutto = 0;
+      let reisefradragKappet = false;
       if (reisefradrag_km !== undefined && reisefradrag_km > 0) {
         reiseBrutto =
           reisefradrag_km * reisefradrag_dager * 2 * s.reisefradrag.sats_per_km;
-        reisefradrag = Math.max(0, reiseBrutto - s.reisefradrag.egenandel);
+        reisefradrag = Math.min(
+          Math.max(0, reiseBrutto - s.reisefradrag.egenandel),
+          s.reisefradrag.maks
+        );
+        reisefradragKappet =
+          reiseBrutto - s.reisefradrag.egenandel > s.reisefradrag.maks;
       }
 
       // 3. Foreldrefradrag
@@ -261,7 +268,7 @@ export function registerInntektsskattVerktøy(server: McpServer): void {
         );
       if (reisefradrag > 0)
         linjer.push(
-          `  Reisefradrag:             ${formaterKr(reisefradrag).padStart(10)}  (brutto ${formaterKr(reiseBrutto)} − egenandel ${formaterKr(s.reisefradrag.egenandel)})`
+          `  Reisefradrag:             ${formaterKr(reisefradrag).padStart(10)}  (brutto ${formaterKr(reiseBrutto)} − egenandel ${formaterKr(s.reisefradrag.egenandel)}${reisefradragKappet ? `, kappet på maks ${formaterKr(s.reisefradrag.maks)}` : ""})`
         );
       if (foreldrefradrag > 0)
         linjer.push(

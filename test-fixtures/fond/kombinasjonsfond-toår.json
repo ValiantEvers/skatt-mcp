@@ -1,6 +1,6 @@
 {
   "navn": "Kombinasjonsfond med varierende aksjeandel over to år",
-  "beskrivelse": "Kjøp 2024, partial salg 2025. Aksjeandel endrer seg fra 0.50 (2024) til 0.60 (2025). Snitt per delsalg = (0.50 + 0.60)/2 = 0.55. Tester pre-pass-skjermingsberegning (lot aktiv 1.1.2025) og snittsaksjeandel-vekting.",
+  "beskrivelse": "Kjøp 2024, partial salg 2025. Aksjeandel endrer seg fra 0.50 (2024) til 0.60 (2025). Snitt per delsalg = (0.50 + 0.60)/2 = 0.55. Tester at årets skjerming tilfaller eieren 31.12 (§ 10-12 (2)): beregnes av lots i behold 31.12 (50 andeler), går kun til utgangs-carry og kan ikke brukes mot salg i samme år (inngangs-carry 0 → brukt skjerming 0). Tester også snittsaksjeandel-vekting.",
   "klassifisering": {
     "navn": "Test Kombinasjonsfond",
     "type": "kombinasjonsfond",
@@ -36,16 +36,16 @@
     "snittsaksjeandel_per_delsalg": 0.55,
     "aksjedel": 5500,
     "rentedel": 4500,
-    "skjermingsgrunnlag_årets": 50000,
-    "årets_skjerming_beregnet": 1800,
-    "brukt_skjerming": 1800,
-    "aksjedel_etter_skjerming": 3700,
-    "oppjustert_aksjedel": 6364,
-    "skatt_aksjedel": 1400.08,
+    "skjermingsgrunnlag_årets": 25000,
+    "årets_skjerming_beregnet": 900,
+    "brukt_skjerming": 0,
+    "aksjedel_etter_skjerming": 5500,
+    "oppjustert_aksjedel": 9460,
+    "skatt_aksjedel": 2081.2,
     "skatt_rentedel": 990,
-    "total_skatt": 2390.08,
+    "total_skatt": 3071.2,
     "bortfalt_skjerming": 0,
-    "utgangs_carry": 0,
+    "utgangs_carry": 900,
     "gjenstående_andeler": 50
   }
 }

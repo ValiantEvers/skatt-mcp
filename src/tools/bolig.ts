@@ -150,6 +150,21 @@ export function registerBoligVerktøy(server: McpServer): void {
       const kjøp = parseDato(kjoepsdato);
       const salg = parseDato(salgsdato);
 
+      if (salg.getTime() < kjøp.getTime()) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text" as const,
+              text:
+                `Ugyldig datorekkefølge: salgsdato (${salgsdato}) er før ` +
+                `kjøpsdato (${kjoepsdato}). Salget kan ikke skje før kjøpet — ` +
+                `kontroller datoene.`,
+            },
+          ],
+        };
+      }
+
       const gevinst = salgspris - kjoepspris - paakostninger;
       const eiertid = dagsDiff(kjøp, salg);
 

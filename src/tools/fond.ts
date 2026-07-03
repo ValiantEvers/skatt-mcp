@@ -153,16 +153,16 @@ interface IsinBeregning {
   utgangs_carry: number;
 }
 
-// Splitt transaksjoner i pre-rapporteringsår og fra-og-med-rapporteringsår.
+// Splitt transaksjoner i til-og-med-31.12-rapporteringsåret og full historikk.
 // Sortert kronologisk innen hver del.
 function splittPrePost(
   trans: KanoniskFondTransaksjon[],
   rapporteringsår: number
-): { pre: KanoniskFondTransaksjon[]; full: KanoniskFondTransaksjon[] } {
+): { tilOgMed: KanoniskFondTransaksjon[]; full: KanoniskFondTransaksjon[] } {
   const sortert = [...trans].sort((a, b) => a.dato.localeCompare(b.dato));
-  const grense = `${rapporteringsår}-01-01`;
-  const pre = sortert.filter((t) => t.dato < grense);
-  return { pre, full: sortert };
+  const grense = `${rapporteringsår + 1}-01-01`;
+  const tilOgMed = sortert.filter((t) => t.dato < grense);
+  return { tilOgMed, full: sortert };
 }
 
 function tilFifo(t: KanoniskFondTransaksjon): FifoTransaksjon {
@@ -192,26 +192,11 @@ function beregnPerIsin(args: BeregnArgs): IsinBeregning {
     args;
   const klass = args.override_klass ?? hentKlass(isin);
 
-  // 1. Lots 1.1 rapporteringsåret = lots etter alle pre-transaksjoner.
-  const { pre, full } = splittPrePost(trans, rapporteringsår);
-  const preRes = kjørFifo(pre.map(tilFifo), `${isin} pre`);
-  const lotsVedÅrsstart = preRes.lots.map((l) => ({
-    ...l,
-    antall_gjenstående: l.antall_gjenstående,
-  }));
+  // 1. Sorter og splitt: transaksjoner til og med 31.12 i rapporteringsåret
+  //    (for beholdning ved årsslutt) og full historikk (for FIFO/salg).
+  const { tilOgMed, full } = splittPrePost(trans, rapporteringsår);
 
-  // 2. Årets skjerming = sum over hver lot aktiv 1.1.året:
-  //    skjermingsgrunnlag_lot = lot.kostbase_total × aksjeandel_kjøpsår
-  //    årets_skjerming_lot   = skjermingsgrunnlag_lot × skjermingsrente
-  let årets_skjerming = 0;
-  for (const lot of lotsVedÅrsstart) {
-    const kjøpsår = aar(lot.dato);
-    const aksjeandel_kjøpsår = hentAksjeandel(klass, isin, kjøpsår);
-    const grunnlag = lot.antall_gjenstående * lot.kostpris_per_enhet * aksjeandel_kjøpsår;
-    årets_skjerming += grunnlag * skjermingsrente;
-  }
-
-  // 3. Full FIFO med delsalg → alle salgs-resultater inkl. lot-breakdown.
+  // 2. Full FIFO med delsalg → alle salgs-resultater inkl. lot-breakdown.
   let fullRes;
   try {
     fullRes = kjørFifo(full.map(tilFifo), isin, /* inkluder_delsalg */ true);
@@ -225,12 +210,32 @@ function beregnPerIsin(args: BeregnArgs): IsinBeregning {
     throw e;
   }
 
-  // 4. Filtrer salg per rapporteringsår.
+  // 3. Lots i behold 31.12 rapporteringsåret. tilOgMed er et prefiks av full,
+  //    så denne kjøringen kan ikke feile når full FIFO gikk gjennom.
+  const årsSluttRes = kjørFifo(tilOgMed.map(tilFifo), `${isin} 31.12`);
+
+  // 4. Årets skjerming tilfaller den som eier andelen 31.12 (§ 10-12 (2),
+  //    jf. § 10-20 (4)): den beregnes av lots i behold 31.12 og kan først
+  //    fradras fra året etter — den går kun til utgangs-carry, aldri mot
+  //    salg i rapporteringsåret.
+  //    skjermingsgrunnlag_lot = lot.kostbase_total × aksjeandel_kjøpsår
+  //    årets_skjerming_lot   = skjermingsgrunnlag_lot × skjermingsrente
+  let årets_skjerming = 0;
+  for (const lot of årsSluttRes.lots) {
+    const kjøpsår = aar(lot.dato);
+    const aksjeandel_kjøpsår = hentAksjeandel(klass, isin, kjøpsår);
+    const grunnlag = lot.antall_gjenstående * lot.kostpris_per_enhet * aksjeandel_kjøpsår;
+    årets_skjerming += grunnlag * skjermingsrente;
+  }
+
+  // 5. Filtrer salg per rapporteringsår.
   const salgRapportert = fullRes.salg.filter((s) => aar(s.dato) === rapporteringsår);
   const salgUtenfor = fullRes.salg.filter((s) => aar(s.dato) !== rapporteringsår);
 
-  // 5. Per salg: beregn aksjedel/rentedel per delsalg (snittsaksjeandel per lot).
-  let tilgjengelig_skjerming = inngangs_carry + årets_skjerming;
+  // 6. Per salg: beregn aksjedel/rentedel per delsalg (snittsaksjeandel per lot).
+  //    Kun inngangs-carry (skjerming opptjent t.o.m. 31.12 forrige år) er
+  //    disponibel mot salg i rapporteringsåret.
+  let tilgjengelig_skjerming = inngangs_carry;
   let brukt_skjerming_total = 0;
   const salg_i_år: SalgIRapporteringsår[] = [];
 
@@ -284,20 +289,22 @@ function beregnPerIsin(args: BeregnArgs): IsinBeregning {
     });
   }
 
-  // 6. Bortfall: hvis sluttbeholdning = 0 etter rapporteringsåret, bortfaller
-  //    gjenværende akkumulering (§ 10-12 / § 10-21).
-  const sluttsaldo = fullRes.lots.reduce(
+  // 7. Utgangs-carry = ubrukt inngangs-carry + årets skjerming (opptjent
+  //    31.12). Bortfall: hvis beholdningen er 0 per 31.12 rapporteringsåret,
+  //    bortfaller gjenværende akkumulering (§ 10-12 / § 10-21) — årets
+  //    skjerming er da også 0 siden ingen lots er i behold.
+  const sluttsaldo = årsSluttRes.lots.reduce(
     (sum, l) => sum + l.antall_gjenstående,
     0
   );
   let bortfalt = 0;
-  let utgangs_carry = tilgjengelig_skjerming;
+  let utgangs_carry = tilgjengelig_skjerming + årets_skjerming;
   if (sluttsaldo === 0) {
     bortfalt = utgangs_carry;
     utgangs_carry = 0;
   }
 
-  // 7. Label fra vektet snitt over alle salg i rapporteringsåret
+  // 8. Label fra vektet snitt over alle salg i rapporteringsåret
   //    (eller fra config hvis ingen salg).
   const totalGevinst = salg_i_år.reduce((s, x) => s + x.gevinst, 0);
   let labelSnitt: number;
@@ -375,6 +382,28 @@ export function registerFondVerktøy(server: McpServer): void {
       },
     },
     async ({ transaksjoner, inngangs_carry_per_isin, rapporteringsaar }) => {
+      // 0. Årssperre: satser finnes foreløpig kun for 2025
+      //    (src/data/satser/2025.json). Schemaet tillater 2020–2025 for å være
+      //    konsistent med aksjer.ts/krypto.ts (FIFO-historikk), men uten
+      //    års-spesifikke satser ville et annet rapporteringsår fått 2025-
+      //    skjermingsrente og -oppjusteringsfaktor påført stille — feil tall.
+      //    Stopp eksplisitt heller enn å regne galt.
+      const STØTTEDE_ÅR = [2025];
+      if (!STØTTEDE_ÅR.includes(rapporteringsaar)) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text" as const,
+              text:
+                `Rapporteringsår ${rapporteringsaar} støttes ikke: satser finnes kun for ` +
+                `${STØTTEDE_ÅR.join(", ")} (src/data/satser/). Legg til satser/<år>.json ` +
+                `og utvid STØTTEDE_ÅR før skatteoppgjør for andre år kjøres.`,
+            },
+          ],
+        };
+      }
+
       const skjermingsrente = satser2025.skjermingsrente.personlige_aksjonærer;
       const oppjusteringsfaktor = satser2025.aksjeoppjustering.faktor;
       const skjermingsrenteProsent = (skjermingsrente * 100)
@@ -525,7 +554,7 @@ export function registerFondVerktøy(server: McpServer): void {
             `     Inngangs-carry (31.12 forrige år):       ${formaterKrDesimal(r.inngangs_carry).padStart(12)}`
           );
           linjer.push(
-            `     Beregnet årets skjerming:                ${formaterKrDesimal(r.årets_skjerming_beregnet).padStart(12)}`
+            `     Årets skjerming (tilfaller 31.12):       ${formaterKrDesimal(r.årets_skjerming_beregnet).padStart(12)}`
           );
           linjer.push(
             `     Brukt mot salg:                          ${formaterKrDesimal(r.brukt_skjerming_total).padStart(12)}`

@@ -97,8 +97,9 @@
 
   "reisefradrag": {
     "sats_per_km": 1.83,
-    "egenandel": 14950,
-    "merknad": "Fradraget gis bare for det som overstiger egenandelen"
+    "egenandel": 15250,
+    "maks": 100880,
+    "merknad": "Fradraget gis bare for det som overstiger egenandelen, og er begrenset oppad til maks (sktl. § 6-44)"
   },
 
   "fagforeningskontingent": {
