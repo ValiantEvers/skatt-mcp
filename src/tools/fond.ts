@@ -1,8 +1,14 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import satser2025 from "../data/satser/2025.json" with { type: "json" };
 import fondKlassRaw from "../data/fond-klassifisering.json" with { type: "json" };
 import type { ParagrafRef } from "./lovdata.js";
+import {
+  hentSatser,
+  formaterKr,
+  formaterKrDesimal,
+  paragrafBlokk,
+  satsForbehold,
+} from "./felles.js";
 import {
   kjørFifo,
   IkkeNokBeholdningFeil,
@@ -29,27 +35,6 @@ const klassifisering = fondKlassRaw as unknown as Record<
   string,
   FondKlassifiseringEntry
 >;
-
-function formaterKr(n: number): string {
-  return Math.round(n).toLocaleString("nb-NO");
-}
-
-function formaterKrDesimal(n: number): string {
-  const rounded = Math.round(n * 100) / 100;
-  const harDesimaler = rounded % 1 !== 0;
-  return rounded.toLocaleString("nb-NO", {
-    minimumFractionDigits: harDesimaler ? 2 : 0,
-    maximumFractionDigits: 2,
-  });
-}
-
-function paragrafBlokk(refs: ParagrafRef[]): string {
-  return [
-    "",
-    "Relevante paragrafer:",
-    ...refs.map((r) => `  ${r.refID.padEnd(28)} (${r.tittel})`),
-  ].join("\n");
-}
 
 const PARAGRAFER_FOND: ParagrafRef[] = [
   {
@@ -378,17 +363,17 @@ export function registerFondVerktøy(server: McpServer): void {
           .describe(
             "Valgfri carry inn til rapporteringsåret per ISIN (default: ingen)"
           ),
-        rapporteringsaar: z.number().int().min(2020).max(2025).default(2025),
+        rapporteringsaar: z.number().int().min(2020).max(2026).default(2025),
       },
     },
     async ({ transaksjoner, inngangs_carry_per_isin, rapporteringsaar }) => {
-      // 0. Årssperre: satser finnes foreløpig kun for 2025
-      //    (src/data/satser/2025.json). Schemaet tillater 2020–2025 for å være
-      //    konsistent med aksjer.ts/krypto.ts (FIFO-historikk), men uten
-      //    års-spesifikke satser ville et annet rapporteringsår fått 2025-
-      //    skjermingsrente og -oppjusteringsfaktor påført stille — feil tall.
+      // 0. Årssperre: satser finnes kun for årene i src/data/satser/.
+      //    Schemaet tillater fra 2020 for å være konsistent med
+      //    aksjer.ts/krypto.ts (FIFO-historikk), men uten års-spesifikke
+      //    satser ville et annet rapporteringsår fått feil skjermingsrente
+      //    og oppjusteringsfaktor påført stille — feil tall.
       //    Stopp eksplisitt heller enn å regne galt.
-      const STØTTEDE_ÅR = [2025];
+      const STØTTEDE_ÅR = [2025, 2026];
       if (!STØTTEDE_ÅR.includes(rapporteringsaar)) {
         return {
           isError: true,
@@ -404,8 +389,9 @@ export function registerFondVerktøy(server: McpServer): void {
         };
       }
 
-      const skjermingsrente = satser2025.skjermingsrente.personlige_aksjonærer;
-      const oppjusteringsfaktor = satser2025.aksjeoppjustering.faktor;
+      const satser = hentSatser(rapporteringsaar);
+      const skjermingsrente = satser.skjermingsrente.personlige_aksjonærer;
+      const oppjusteringsfaktor = satser.aksjeoppjustering.faktor;
       const skjermingsrenteProsent = (skjermingsrente * 100)
         .toFixed(1)
         .replace(".", ",");
@@ -452,7 +438,28 @@ export function registerFondVerktøy(server: McpServer): void {
         }
       }
 
-      // 2. Carry-map
+      // 2. Carry-map. Carry-entries for ISIN-er uten transaksjoner kan ikke
+      //    knyttes til noen beholdning og ville ellers blitt droppet stille —
+      //    stopp eksplisitt heller enn å underrapportere skjerming.
+      const carryUtenTransaksjoner = inngangs_carry_per_isin
+        .map((c) => c.isin)
+        .filter((isin) => !uniqueIsiner.has(isin));
+      if (carryUtenTransaksjoner.length > 0) {
+        return {
+          isError: true,
+          content: [
+            {
+              type: "text" as const,
+              text:
+                `inngangs_carry_per_isin inneholder ISIN-er uten transaksjoner: ` +
+                `${carryUtenTransaksjoner.join(", ")}. Carry kan ikke knyttes til ` +
+                `noen beholdning og ville blitt ignorert stille. Fjern entryene, ` +
+                `eller legg til transaksjonene for disse ISIN-ene.`,
+            },
+          ],
+        };
+      }
+
       const carryMap = new Map<string, number>();
       for (const c of inngangs_carry_per_isin) {
         carryMap.set(c.isin, c.akkumulert_ubrukt_skjerming_inngaaende);
@@ -488,9 +495,12 @@ export function registerFondVerktøy(server: McpServer): void {
       }
 
       // 4. Output-bygging — én blokk per ISIN med kronologisk salg-tabell.
+      //    Forbehold for år med foreløpige satser (null for 2025 → uendret output).
+      const forbehold = satsForbehold(rapporteringsaar);
       const linjer: string[] = [
         `Verdipapirfond — rapporteringsår ${rapporteringsaar}`,
         `Skjermingsrente: ${skjermingsrenteProsent} %, oppjusteringsfaktor: ${oppjusteringsfaktor}`,
+        ...(forbehold ? [forbehold] : []),
         ``,
       ];
 

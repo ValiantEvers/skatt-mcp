@@ -1,18 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import satser2025 from "../data/satser/2025.json" with { type: "json" };
 import type { ParagrafRef } from "./lovdata.js";
-
-type Satser = typeof satser2025;
-
-function hentSatser(år: number): Satser {
-  if (år === 2025) return satser2025;
-  throw new Error(`Satser for ${år} er ikke implementert ennå`);
-}
-
-function formaterKr(n: number): string {
-  return Math.round(n).toLocaleString("nb-NO");
-}
+import { hentSatser, formaterKr, paragrafBlokk } from "./felles.js";
 
 function parseDato(s: string): Date {
   const [år, mnd, dag] = s.split("-").map(Number);
@@ -52,12 +41,6 @@ const ET_ÅR = 365;
 const TO_ÅR = 730;
 const FEM_ÅR = 1825;
 const ÅTTE_ÅR = 2920;
-
-function paragrafBlokk(refs: ParagrafRef[]): string {
-  return ["", "Relevante paragrafer:",
-    ...refs.map(r => `  ${r.refID.padEnd(28)} (${r.tittel})`),
-  ].join("\n");
-}
 
 function boligParagrafRefs(skattefri: boolean, gevinst: number): ParagrafRef[] {
   const refs: ParagrafRef[] = [

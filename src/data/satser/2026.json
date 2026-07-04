@@ -1,0 +1,121 @@
+{
+  "_meta": {
+    "år": 2026,
+    "kilder": [
+      "Stortingsvedtak om skatt for inntektsåret 2026, vedtatt 2025-12-18 (https://lovdata.no/dokument/STV/forskrift/2025-12-18-2747) — formuesskatt §2-1/§2-3, selskapsskatt §3-3",
+      "Regjeringen — Skattesatser 2026 (https://www.regjeringen.no/no/tema/okonomi-og-budsjett/skatter-og-avgifter/skatte-og-avgiftssatser/skattesatser-2026/id3121978/) — full tabell 2025→2026; 2025-kolonnen kryssjekket felt-for-felt mot 2025.json (null avvik)",
+      "Skatteetaten — oppjusteringsfaktor (https://www.skatteetaten.no/en/rates/factor-for-upward-adjustment-of-gainloss-or-dividend-on-shares/) — 1,72 i 2026",
+      "Skatteetaten — skjermingsrente (https://www.skatteetaten.no/en/rates/risk-free-interest-rate-for-shares-and-sole-proprietorships/) — 2026-renten fastsettes av Skattedirektoratet i januar 2027; siste fastsatte er 2025: 3,6 %",
+      "skatt-optimizer src/skattopt/data/satser/2026.json (vedtatte satser, hentet 2026-06-10, adversarialt verifisert) — formuesskatt, aksjeoppjustering, skjermingsrente-proxy"
+    ],
+    "hentet": "2026-07-04",
+    "merknad": "Vedtatte 2026-satser. FORELØPIG: skjermingsrenten for 2026 fastsettes først av Skattedirektoratet i januar 2027 — 2025-renten (3,6 %) brukes som proxy; oppdater når fastsatt. Standard reelle tilfeller. Ikke ektefelle-felles, ikke Finnmark/Troms, ikke klasse 0, ikke særfradrag."
+  },
+
+  "alminnelig_inntektsskatt": {
+    "sats": 0.22,
+    "merknad": "Gjelder personer og bedrifter"
+  },
+
+  "trinnskatt": [
+    { "innslagspunkt": 226100, "sats": 0.017 },
+    { "innslagspunkt": 318300, "sats": 0.040 },
+    { "innslagspunkt": 725050, "sats": 0.137 },
+    { "innslagspunkt": 980100, "sats": 0.168 },
+    { "innslagspunkt": 1467200, "sats": 0.178 }
+  ],
+
+  "trygdeavgift": {
+    "nedre_grense": 99650,
+    "satser": {
+      "lønn": 0.076,
+      "pensjon": 0.051,
+      "næring": 0.108
+    },
+    "tjuefem_prosent_regel": 0.25,
+    "merknad": "Trygdeavgift skal ikke overstige 25 % av (personinntekt − nedre_grense). Glatter overgangen rett over nedre grense."
+  },
+
+  "personfradrag": {
+    "klasse_1": 114540
+  },
+
+  "minstefradrag": {
+    "lønn": { "sats": 0.46, "maks": 95700 },
+    "pensjon": { "sats": 0.40, "maks": 75400 }
+  },
+
+  "formuesskatt": {
+    "bunnfradrag_enslig": 1900000,
+    "bunnfradrag_ektefeller": 3800000,
+    "kommunal_sats": 0.0035,
+    "statlig_trinn1_sats": 0.0065,
+    "statlig_trinn2_innslag": 21500000,
+    "statlig_trinn2_sats": 0.0075,
+    "merknad": "Restrukturert 2025→2026: kommunal 0,525→0,35 %, statlig trinn 1 0,475→0,65 %, trinn 2 0,575→0,75 % (total statlig sats over innslaget), innslag 20,7→21,5 MNOK, bunnfradrag 1,76→1,9 MNOK — samlede marginalsatser uendret (1,0 %/1,1 %)."
+  },
+
+  "verdsettingsrabatter": {
+    "primærbolig": {
+      "verdsetting_opp_til_10M": 0.25,
+      "verdsetting_over_10M": 0.70,
+      "merknad": "Markedsverdi × 0,25 for de første 10 M, × 0,70 for det som er over. Uendret 2025→2026."
+    },
+    "sekundærbolig": { "verdsetting": 1.00 },
+    "fritidsbolig": {
+      "verdsetting": 0.30,
+      "merknad": "Forenklet: 30 % av markedsverdi. I virkeligheten basert på historisk byggekostnad — for vår breadth-shallow scope holder 30 % som default."
+    },
+    "aksjer_aksjefond": {
+      "verdsetting": 0.80,
+      "gjeldsreduksjon": 0.20,
+      "merknad": "20 % rabatt på verdi OG på tilordnet gjeld. Uendret 2025→2026."
+    },
+    "ASK_aksjesparekonto": {
+      "verdsetting": 0.80,
+      "gjeldsreduksjon": 0.20,
+      "merknad": "Behandles som vanlige aksjer for formuesverdsetting"
+    },
+    "driftsmidler": {
+      "verdsetting": 0.70,
+      "gjeldsreduksjon": 0.30
+    },
+    "bankinnskudd": { "verdsetting": 1.00 },
+    "krypto": { "verdsetting": 1.00 }
+  },
+
+  "BSU": {
+    "skattefradrag_sats": 0.10,
+    "maks_årlig_innskudd": 27500,
+    "maks_total_saldo": 300000,
+    "krav": "Ikke eie primær- eller sekundærbolig per 31.12. Aldersgrense: t.o.m. året man fyller 33."
+  },
+
+  "foreldrefradrag": {
+    "første_barn": 15000,
+    "hvert_ekstra_barn": 10000,
+    "aldersgrense_barn": 12
+  },
+
+  "reisefradrag": {
+    "sats_per_km": 1.90,
+    "egenandel": 12000,
+    "maks": 120000,
+    "merknad": "Fradraget gis bare for det som overstiger egenandelen, og er begrenset oppad til maks (sktl. § 6-44)"
+  },
+
+  "fagforeningskontingent": {
+    "maks": 8700
+  },
+
+  "aksjeoppjustering": {
+    "faktor": 1.72,
+    "merknad": "Anvendes på utbytte og gevinst på aksjer/aksjefond. Uendret siden 06.10.2022. Gir effektiv sats 22 % × 1,72 = 37,84 %."
+  },
+
+  "skjermingsrente": {
+    "personlige_aksjonærer": 0.036,
+    "merknad": "FORELØPIG (proxy = 2025-renten): skjermingsrenten for 2026 fastsettes av Skattedirektoratet først i januar 2027. Rapporter som bruker denne bærer et eksplisitt forbehold i output. Oppdater verdien når renten er fastsatt.",
+    "kilde": "https://www.skatteetaten.no/en/rates/risk-free-interest-rate-for-shares-and-sole-proprietorships/"
+  }
+}

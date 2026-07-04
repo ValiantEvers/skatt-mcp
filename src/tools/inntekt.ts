@@ -1,27 +1,15 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import satser2025 from "../data/satser/2025.json" with { type: "json" };
 import type { ParagrafRef } from "./lovdata.js";
-
-type Satser = typeof satser2025;
-
-function hentSatser(år: number): Satser {
-  if (år === 2025) return satser2025;
-  throw new Error(`Satser for ${år} er ikke implementert ennå`);
-}
-
-function formaterKr(n: number): string {
-  return Math.round(n).toLocaleString("nb-NO");
-}
+import {
+  hentSatser,
+  formaterKr,
+  paragrafBlokk,
+  satsForbehold,
+} from "./felles.js";
 
 function formaterProsent(sats: number): string {
   return (sats * 100).toFixed(1).replace(".", ",") + " %";
-}
-
-function paragrafBlokk(refs: ParagrafRef[]): string {
-  return ["", "Relevante paragrafer:",
-    ...refs.map(r => `  ${r.refID.padEnd(28)} (${r.tittel})`),
-  ].join("\n");
 }
 
 const PARAGRAFER_INNTEKT: ParagrafRef[] = [
@@ -49,8 +37,8 @@ export function registerInntektsskattVerktøy(server: McpServer): void {
           .number()
           .int()
           .min(2025)
-          .max(2025)
-          .describe("Inntektsår (kun 2025 støttet ennå)"),
+          .max(2026)
+          .describe("Inntektsår (2025–2026 støttet)"),
       },
     },
     async ({ aar }) => {
@@ -76,7 +64,7 @@ export function registerInntektsskattVerktøy(server: McpServer): void {
           .positive()
           .describe("Brutto årsinntekt i NOK"),
         inntektstype: z.enum(["lønn", "pensjon", "næring"]).default("lønn"),
-        aar: z.number().int().min(2025).max(2025).default(2025),
+        aar: z.number().int().min(2025).max(2026).default(2025),
         gjeldsrenter: z
           .number()
           .nonnegative()
@@ -309,6 +297,10 @@ export function registerInntektsskattVerktøy(server: McpServer): void {
         ``,
         `Effektiv sats: ${effektivSats.toFixed(2).replace(".", ",")} %`
       );
+
+      // Forbehold for år med foreløpige satser (null for 2025 → uendret output).
+      const forbehold = satsForbehold(aar);
+      if (forbehold) linjer.push(``, forbehold);
 
       const paragrafRefs: ParagrafRef[] = [...PARAGRAFER_INNTEKT];
       if (bsu_innskudd > 0) paragrafRefs.push(PARAGRAF_BSU);

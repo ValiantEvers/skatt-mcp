@@ -1,6 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import type { ParagrafRef } from "./lovdata.js";
+import { formaterKr, paragrafBlokk } from "./felles.js";
 import {
   kjørFifo,
   IkkeNokBeholdningFeil,
@@ -11,18 +12,8 @@ import {
 
 type RealisertSalg = FifoSalgsResultat & { rapportert: boolean };
 
-function formaterKr(n: number): string {
-  return Math.round(n).toLocaleString("nb-NO");
-}
-
 function formaterAntall(n: number): string {
   return n.toLocaleString("nb-NO", { maximumFractionDigits: 8 });
-}
-
-function paragrafBlokk(refs: ParagrafRef[]): string {
-  return ["", "Relevante paragrafer:",
-    ...refs.map(r => `  ${r.refID.padEnd(28)} (${r.tittel})`),
-  ].join("\n");
 }
 
 const PARAGRAFER_KRYPTO: ParagrafRef[] = [

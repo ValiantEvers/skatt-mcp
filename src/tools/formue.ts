@@ -1,9 +1,14 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import satser2025 from "../data/satser/2025.json" with { type: "json" };
 import type { ParagrafRef } from "./lovdata.js";
+import {
+  hentSatser,
+  formaterKr,
+  formaterKrDesimal,
+  paragrafBlokk,
+  type Satser,
+} from "./felles.js";
 
-type Satser = typeof satser2025;
 type Rabatter = Satser["verdsettingsrabatter"];
 type FormuespostType =
   | "primærbolig"
@@ -14,26 +19,6 @@ type FormuespostType =
   | "driftsmidler"
   | "bankinnskudd"
   | "krypto";
-
-function hentSatser(år: number): Satser {
-  if (år === 2025) return satser2025;
-  throw new Error(`Satser for ${år} er ikke implementert ennå`);
-}
-
-function formaterKr(n: number): string {
-  return Math.round(n).toLocaleString("nb-NO");
-}
-
-// Brukes for skattekomponenter der halv-krone er vanlig (f.eks. formuesskatt)
-function formaterKrDesimal(n: number): string {
-  // Vis maks 2 desimaler, men bare om nødvendig (18 322,50 → ikke 18 322,5000)
-  const rounded = Math.round(n * 100) / 100;
-  const hasDecimals = rounded % 1 !== 0;
-  return rounded.toLocaleString("nb-NO", {
-    minimumFractionDigits: hasDecimals ? 2 : 0,
-    maximumFractionDigits: 2,
-  });
-}
 
 function beregnSkattemessigVerdi(
   type: FormuespostType,
@@ -76,12 +61,6 @@ function hentGjeldsreduksjon(type: FormuespostType, r: Rabatter): number {
     default:
       return 0;
   }
-}
-
-function paragrafBlokk(refs: ParagrafRef[]): string {
-  return ["", "Relevante paragrafer:",
-    ...refs.map(r => `  ${r.refID.padEnd(28)} (${r.tittel})`),
-  ].join("\n");
 }
 
 const PARAGRAFER_FORMUE: ParagrafRef[] = [

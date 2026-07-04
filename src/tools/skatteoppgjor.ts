@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { readFile } from "node:fs/promises";
-import satser2025 from "../data/satser/2025.json" with { type: "json" };
 import fondKlassRaw from "../data/fond-klassifisering.json" with { type: "json" };
+import { hentSatser, formaterKr, satsForbehold } from "./felles.js";
 import {
   parseNordnetCsv,
   NordnetCsvFeil,
@@ -36,10 +36,6 @@ const klassifisering = fondKlassRaw as unknown as Record<
 >;
 
 // ── Hjelpere ────────────────────────────────────────────────────────────────
-
-function formaterKr(n: number): string {
-  return Math.round(n).toLocaleString("nb-NO");
-}
 
 function aar(dato: string): number {
   return parseInt(dato.substring(0, 4), 10);
@@ -143,7 +139,7 @@ export function registerSkatteoppgjoerVerktøy(server: McpServer): void {
           .string()
           .optional()
           .describe("Rå CSV-tekst limt inn direkte (alternativ til csv_filsti)"),
-        rapporteringsaar: z.number().int().min(2020).max(2025).default(2025),
+        rapporteringsaar: z.number().int().min(2020).max(2026).default(2025),
         inngangs_carry_per_isin: z
           .array(carrySchema)
           .default([])
@@ -151,13 +147,13 @@ export function registerSkatteoppgjoerVerktøy(server: McpServer): void {
       },
     },
     async ({ csv_filsti, csv_tekst, rapporteringsaar, inngangs_carry_per_isin }) => {
-      // 0. Årssperre: satser finnes foreløpig kun for 2025
-      //    (src/data/satser/2025.json). Schemaet tillater 2020–2025 for å være
-      //    konsistent med aksjer.ts/krypto.ts (FIFO-historikk), men uten
-      //    års-spesifikke satser ville et annet rapporteringsår fått 2025-
-      //    skjermingsrente og -oppjusteringsfaktor påført stille — feil tall.
+      // 0. Årssperre: satser finnes kun for årene i src/data/satser/.
+      //    Schemaet tillater fra 2020 for å være konsistent med
+      //    aksjer.ts/krypto.ts (FIFO-historikk), men uten års-spesifikke
+      //    satser ville et annet rapporteringsår fått feil skjermingsrente
+      //    og oppjusteringsfaktor påført stille — feil tall.
       //    Stopp eksplisitt heller enn å regne galt.
-      const STØTTEDE_ÅR = [2025];
+      const STØTTEDE_ÅR = [2025, 2026];
       if (!STØTTEDE_ÅR.includes(rapporteringsaar)) {
         return {
           isError: true,
@@ -251,8 +247,9 @@ export function registerSkatteoppgjoerVerktøy(server: McpServer): void {
         carryMap.set(c.isin, c.akkumulert_ubrukt_skjerming_inngaaende);
       }
 
-      const skjermingsrente = satser2025.skjermingsrente.personlige_aksjonærer;
-      const oppjusteringsfaktor = satser2025.aksjeoppjustering.faktor;
+      const satser = hentSatser(rapporteringsaar);
+      const skjermingsrente = satser.skjermingsrente.personlige_aksjonærer;
+      const oppjusteringsfaktor = satser.aksjeoppjustering.faktor;
 
       for (const [isin, tList] of perIsin) {
         const navn = tList[0]?.ticker ?? isin;
@@ -337,9 +334,12 @@ export function registerSkatteoppgjoerVerktøy(server: McpServer): void {
         .toFixed(1)
         .replace(".", ",");
 
+      // Forbehold for år med foreløpige satser (null for 2025 → uendret output).
+      const forbehold = satsForbehold(rapporteringsaar);
       const L: string[] = [
         `Skatteoppgjør fra Nordnet — rapporteringsår ${rapporteringsaar}`,
         `Skjermingsrente: ${skjermingsrenteProsent} %, oppjusteringsfaktor: ${oppjusteringsfaktor}`,
+        ...(forbehold ? [forbehold] : []),
         `Kilde: ${csv_filsti ?? "innlimt CSV-tekst"}`,
         `Transaksjoner parset: ${parsed.transaksjoner.length} ` +
           `(${parsed.oppsummering.antall_kjøp} kjøp, ${parsed.oppsummering.antall_salg} salg), ` +
