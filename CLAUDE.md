@@ -47,11 +47,11 @@ echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | node dist/se
 skatt-mcp/
 ├── src/
 │   ├── server.ts                    ← MCP-entry, registrerer alle verktøy + stdio-transport
-│   ├── tools/                       ← ett verktøy per domene (inntekt, formue, aksjer, ask, fond, bolig, krypto, lovdata, import_nordnet)
+│   ├── tools/                       ← ett verktøy per domene (inntekt, formue, aksjer, ask, fond, bolig, krypto, lovdata, import_nordnet) + felles.ts (delte hjelpere, 2026-07-04)
 │   ├── lib/
 │   │   ├── fifo.ts                  ← domene-nøytral FIFO-engine (brukt av aksjer + krypto)
 │   │   └── csv-parsers/nordnet.ts   ← Nordnet CSV-parser (ren funksjon)
-│   └── data/satser/2025.json        ← skattesatser med _meta-blokk
+│   └── data/satser/{2025,2026}.json ← skattesatser med _meta-blokk (2026: vedtatt 2025-12-18, FORELØPIG skjermingsrente — forbehold vises i output)
 ├── data/lovdata-cache/              ← gitignored, lazy-cached lov-XML + paragraf-JSON
 ├── test-fixtures/nordnet/           ← syntetiske CSV-fixturer + build-fixtures.mjs
 └── scripts/                         ← test-runners; snapshot-output gitignored
@@ -84,7 +84,7 @@ Norsk → engelsk domenevokabular (ikke inverter):
 - Halvøre-presisjon på mellomregninger (`formaterKrDesimal`), heltall på totaler (`formaterKr`).
 - `Map<string, ...>` for ticker-gruppering (bevarer insertion-order).
 - Unicode-minus fra `toLocaleString("nb-NO")` — gotcha for fremtidig CSV-eksport.
-- Alle verktøy har `rapporteringsår`-felt. Standard: `z.number().int().min(2025).max(2025).default(2025)`. Unntak: `aksjer.ts` og `krypto.ts` bruker `min(2020).max(2025)` for å støtte historiske transaksjoner utenfor rapporteringsåret (FIFO-historikk). Når 2026-satser legges til: opprett `src/data/satser/2026.json` med `_meta`-blokk **og** oppdater min/max-grensene i hver kalkulator.
+- Alle verktøy har `rapporteringsår`-felt. 2026-satser er på plass (2026-07-04): `src/data/satser/2026.json` finnes og kalkulatorene har årsstøtte t.o.m. 2026 — men 2026-skjermingsrenten er FORELØPIG, og output tar forbehold om det. `aksjer.ts` og `krypto.ts` støtter historiske transaksjoner fra 2020 (FIFO-historikk). Ved nytt satsår: opprett `src/data/satser/{år}.json` med `_meta`-blokk **og** utvid min/max-grensene i hver kalkulator.
 
 ### MCP / output
 - Alle kalkulatorer avslutter output med `paragrafBlokk(refs)` — `Relevante paragrafer:` + refID paddet til 28 tegn.
@@ -162,3 +162,5 @@ Registrer i `server.ts`: importer og kall `registerKryptoVerktøy(server)`.
 | `zod` | ^4 |
 | `tsx` (dev) | ^4 |
 | `typescript` | ^5.5 |
+
+Deps vedlikeholdes av delt Renovate-preset (`ValiantEvers/renovate-config`, `renovate.json` siden 2026-07-23).
