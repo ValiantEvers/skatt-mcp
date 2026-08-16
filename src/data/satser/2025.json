@@ -55,9 +55,10 @@
 
   "verdsettingsrabatter": {
     "primærbolig": {
-      "verdsetting_opp_til_10M": 0.25,
-      "verdsetting_over_10M": 0.70,
-      "merknad": "Markedsverdi × 0,25 for de første 10 M, × 0,70 for det som er over"
+      "terskel": 10000000,
+      "verdsetting_under_terskel": 0.25,
+      "verdsetting_over_terskel": 0.70,
+      "merknad": "Markedsverdi × 0,25 for de første 10 M, × 0,70 for det som er over. Terskelen ligger nå i data (den var hardkodet i formue.ts til 2026-08-16) — den er årsavhengig og ble hevet til 14 M f.o.m. 2026."
     },
     "sekundærbolig": { "verdsetting": 1.00 },
     "fritidsbolig": {

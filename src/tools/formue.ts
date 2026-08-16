@@ -27,10 +27,16 @@ function beregnSkattemessigVerdi(
 ): number {
   switch (type) {
     case "primærbolig": {
+      // Terskelen er ÅRSAVHENGIG og leses derfor fra satsfila. Den var hardkodet til
+      // 10 000 000 her fram til 2026-08-16, og 2026-satsfila påsto samtidig «uendret
+      // 2025→2026» — begge deler feil: terskelen ble hevet til 14 M f.o.m. 2026.
+      // En hardkodet grense i en satsdrevet kalkulator er nettopp feilklassen
+      // satsfilene finnes for å utelukke.
+      const terskel = r.primærbolig.terskel;
       const del1 =
-        Math.min(markedsverdi, 10_000_000) * r.primærbolig.verdsetting_opp_til_10M;
+        Math.min(markedsverdi, terskel) * r.primærbolig.verdsetting_under_terskel;
       const del2 =
-        Math.max(0, markedsverdi - 10_000_000) * r.primærbolig.verdsetting_over_10M;
+        Math.max(0, markedsverdi - terskel) * r.primærbolig.verdsetting_over_terskel;
       return del1 + del2;
     }
     case "sekundærbolig":
@@ -121,7 +127,13 @@ export function registerFormuesskattVerktøy(server: McpServer): void {
             "Hvis true, lignes ektefellene under ett for felles formue (sktl. § 2-10) — " +
             "da dobles BÅDE bunnfradraget og innslagspunktet for statlig trinn 2"
           ),
-        aar: z.number().int().min(2025).max(2025).default(2025),
+        aar: z
+          .number()
+          .int()
+          .min(2025)
+          .max(2026)
+          .default(2025)
+          .describe("Inntektsår (2025–2026 støttet)"),
       },
     },
     async ({ formuesposter, total_gjeld, ektefeller, aar }) => {

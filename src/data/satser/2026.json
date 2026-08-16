@@ -57,9 +57,11 @@
 
   "verdsettingsrabatter": {
     "primærbolig": {
-      "verdsetting_opp_til_10M": 0.25,
-      "verdsetting_over_10M": 0.70,
-      "merknad": "Markedsverdi × 0,25 for de første 10 M, × 0,70 for det som er over. Uendret 2025→2026."
+      "terskel": 14000000,
+      "verdsetting_under_terskel": 0.25,
+      "verdsetting_over_terskel": 0.70,
+      "merknad": "Markedsverdi × 0,25 opp til 14 M, × 0,70 for det som er over. RETTET 2026-08-16: fila sa 10 M og «uendret 2025→2026», men terskelen ble hevet 10 → 14 MNOK f.o.m. inntektsåret 2026. Prosentsatsene er uendret; det er kun terskelen som flyttet. Feilen kom av at Prop. 1 LS (2025–2026) fra høsten 2025 fortsatt hadde 10 M — hevingen kom senere.",
+      "kilde": "https://www.skatteetaten.no/satser/formuesverdi-bolig/ (inntektsår 2026)"
     },
     "sekundærbolig": { "verdsetting": 1.00 },
     "fritidsbolig": {
