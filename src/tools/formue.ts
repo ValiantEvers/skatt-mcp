@@ -63,6 +63,17 @@ function hentGjeldsreduksjon(type: FormuespostType, r: Rabatter): number {
   }
 }
 
+// Satsen som prosentstreng, hentet fra satsfila i stedet for hardkodet i etiketten.
+// 2025 gir «0,525»/«0,475»/«0,575» — byte-identisk med de tidligere hardkodede tekstene —
+// og et nytt satsår kan ikke lenger gi en etikett som lyver om tallet ved siden av.
+function formaterSats(sats: number): string {
+  return (sats * 100)
+    .toFixed(3)
+    .replace(/0+$/, "")
+    .replace(/\.$/, "")
+    .replace(".", ",");
+}
+
 const PARAGRAFER_FORMUE: ParagrafRef[] = [
   { refID: "lov/1999-03-26-14/§4-1",  tittel: "Hovedregel om formue" },
   { refID: "lov/1999-03-26-14/§4-10", tittel: "Fast eiendom, herunder andel i boligselskap" },
@@ -106,7 +117,10 @@ export function registerFormuesskattVerktøy(server: McpServer): void {
         ektefeller: z
           .boolean()
           .default(false)
-          .describe("Hvis true, dobles bunnfradraget"),
+          .describe(
+            "Hvis true, lignes ektefellene under ett for felles formue (sktl. § 2-10) — " +
+            "da dobles BÅDE bunnfradraget og innslagspunktet for statlig trinn 2"
+          ),
         aar: z.number().int().min(2025).max(2025).default(2025),
       },
     },
@@ -149,10 +163,18 @@ export function registerFormuesskattVerktøy(server: McpServer): void {
       // 4. Nettoformue (gulv på 0)
       const nettoformue = Math.max(0, totalSkattemessig - sumFradragsberettigetGjeld);
 
-      // 5. Bunnfradrag
+      // 5. Bunnfradrag og trinn 2-innslag
+      // Ektefeller som lignes under ett for felles formue (sktl. § 2-10) har DOBLE beløps-
+      // grenser — ikke bare bunnfradraget, men også innslagspunktet for statlig trinn 2.
+      // Stortingets skattevedtak for 2025 § 2-1: enslig 1 760 000 / 0,475 % opp til
+      // 20 700 000 / 0,575 % over; ektefeller 3 520 000 / 0,475 % opp til 41 400 000 /
+      // 0,575 % over. Samme port som skatt-optimizer formue.py (83873ba, 2026-07-12) —
+      // ikke synk tilbake til den gamle oppførselen.
       const bunnfradrag = ektefeller
         ? s.formuesskatt.bunnfradrag_ektefeller
         : s.formuesskatt.bunnfradrag_enslig;
+      const trinn2Innslag =
+        s.formuesskatt.statlig_trinn2_innslag * (ektefeller ? 2 : 1);
 
       // 6. Formuesskatt
       let kommunal = 0;
@@ -161,12 +183,11 @@ export function registerFormuesskattVerktøy(server: McpServer): void {
 
       if (nettoformue > bunnfradrag) {
         kommunal = (nettoformue - bunnfradrag) * s.formuesskatt.kommunal_sats;
-        const st1Grunnlag =
-          Math.min(nettoformue, s.formuesskatt.statlig_trinn2_innslag) - bunnfradrag;
+        const st1Grunnlag = Math.min(nettoformue, trinn2Innslag) - bunnfradrag;
         statligTrinn1 =
           Math.max(0, st1Grunnlag) * s.formuesskatt.statlig_trinn1_sats;
         statligTrinn2 =
-          Math.max(0, nettoformue - s.formuesskatt.statlig_trinn2_innslag) *
+          Math.max(0, nettoformue - trinn2Innslag) *
           s.formuesskatt.statlig_trinn2_sats;
       }
 
@@ -210,15 +231,16 @@ export function registerFormuesskattVerktøy(server: McpServer): void {
         `  Nettoformue:                   ${formaterKr(nettoformue).padStart(12)}`,
         `  − Bunnfradrag:                 ${formaterKr(bunnfradrag).padStart(12)}`,
         `  Skattegrunnlag:                ${formaterKr(Math.max(0, nettoformue - bunnfradrag)).padStart(12)}`,
+        `  Innslag statlig trinn 2:       ${formaterKr(trinn2Innslag).padStart(12)}${ektefeller ? "  (dobbelt — ektefeller lignes under ett)" : ""}`,
         ``,
         `Formuesskatt:`,
-        `  Kommunal (0,525 %):            ${formaterKrDesimal(kommunal).padStart(12)}`,
-        `  Statlig trinn 1 (0,475 %):     ${formaterKrDesimal(statligTrinn1).padStart(12)}`
+        `  Kommunal (${formaterSats(s.formuesskatt.kommunal_sats)} %):            ${formaterKrDesimal(kommunal).padStart(12)}`,
+        `  Statlig trinn 1 (${formaterSats(s.formuesskatt.statlig_trinn1_sats)} %):     ${formaterKrDesimal(statligTrinn1).padStart(12)}`
       );
 
       if (statligTrinn2 > 0) {
         linjer.push(
-          `  Statlig trinn 2 (0,575 %):     ${formaterKrDesimal(statligTrinn2).padStart(12)}`
+          `  Statlig trinn 2 (${formaterSats(s.formuesskatt.statlig_trinn2_sats)} %):     ${formaterKrDesimal(statligTrinn2).padStart(12)}`
         );
       }
 

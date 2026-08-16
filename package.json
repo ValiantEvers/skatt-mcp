@@ -1,6 +1,6 @@
 {
   "name": "skatt-mcp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Personlig MCP-server for norske skatteberegninger",
   "type": "module",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",
     "pretest": "npm run build",
-    "test": "node scripts/test-nordnet-parser.mjs && node scripts/identity-test-fond.mjs && node scripts/test-skatteoppgjoer.mjs && node scripts/test-nordnet-e2e.mjs && node scripts/test-krypto.mjs"
+    "test": "node scripts/test-nordnet-parser.mjs && node scripts/identity-test-fond.mjs && node scripts/test-skatteoppgjoer.mjs && node scripts/test-nordnet-e2e.mjs && node scripts/test-krypto.mjs && node scripts/test-formue-ektefeller.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

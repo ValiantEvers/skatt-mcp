@@ -1,6 +1,6 @@
 # skatt-mcp — STATUS
 
-**Sist oppdatert: 2026-05-10**
+**Sist oppdatert: 2026-08-16**
 
 ---
 
@@ -58,6 +58,19 @@ Per i dag har vi 7 ferdige kalkulator-domener (inntekt, formue, aksjer, ASK, fon
 - **`transaksjonsgebyr` (ikke `kurtasje`) i lib.** Kurtasje er meglerterm for verdipapir; krypto bruker "gebyr"; fond bruker "tegnings_innløsningsgebyr". Lib bruker nøytralt navn, kallere oversetter på input-laget.
 - **Nordnet-parser produserer rå transaksjons-array (A3-valg).** Ingen automatisk ruting av aksje vs fond. `klassifisering_hint` per verdipapir er rådgivende metadata.
 - **17 paragrafblokker hardkodet.** RefID + kort tittel verifisert mot Lovdata-cache. Kalkulatorer kaller IKKE `lookup_paragraf` ved hver kjøring — refID-listene er statiske.
+- **Ektefeller har DOBLE beløpsgrenser i formuesskatten — også trinn 2-innslaget (fiks 2026-08-16, v0.0.2).**
+  `formue.ts` doblet bunnfradraget, men brukte trinn 2-innslaget (2025: 20,7 MNOK) rått for
+  ektefeller, slik at felles formue mellom 20,7 og 41,4 MNOK feilaktig fikk 0,575 %-satsen på
+  toppen — 30 MNOK ble overbeskattet med 9 300 kr, 50 MNOK med 20 700 kr. Nå
+  `trinn2Innslag = statlig_trinn2_innslag × 2` for ektefeller, brukt i både trinn 1-grunnlaget
+  og trinn 2. Kilde: Stortingets skattevedtak 2025 § 2-1 (Lovdata 2024-12-13-3203) — ektefeller
+  som lignes under ett: bunnfradrag 3 520 000, 0,475 % opp til **41 400 000**, 0,575 % over.
+  Samme bugg ble funnet og fikset først i søster-porten skatt-optimizer `formue.py`
+  (`83873ba`, 2026-07-12) — **ikke synk tilbake til gammel oppførsel.**
+  Fire golden-tester i `scripts/test-formue-ektefeller.mjs` (verifisert at de faktisk feiler
+  når fiksen reverteres). Samme økt: satsene i etikettene («Kommunal (0,525 %)») kommer nå fra
+  satsfila i stedet for å være hardkodet i teksten — 2025-output er byte-identisk, men et nytt
+  satsår kan ikke lenger gi en etikett som lyver om tallet ved siden av.
 - **MD5-baseline-mønster ved refaktorering.** For A1: før- og etter-output for full-salg-cases ble md5-bit-sammenlignet. Baseline-MD5 frosset i `scripts/identity-test-fond.mjs` som regresjon-detector — `90dfb149e343b4657e77e30df98ac8b8` (aksjefond-fullsalg) og `b193070afb26ffe056f68b0b9393a83a` (rentefond-fullsalg). Samme mønster brukt for `aksjer.ts` og `krypto.ts` da `delsalg`-feltet ble lagt til i `lib/fifo.ts`.
 
 ---
@@ -87,6 +100,7 @@ skatt-mcp/
     ├── test-nordnet-parser.mjs        ← unit-tester mot fixturer
     ├── test-nordnet-e2e.mjs           ← parser → calculate_aksjegevinst, ekte fil
     ├── test-krypto.mjs                ← krypto-aksept-test
+    ├── test-formue-ektefeller.mjs     ← 4 golden-tester, ektefellers doble beløpsgrenser
     ├── fetch-paragraf.mjs             ← én-shot lookup_paragraf via MCP
     └── generate-fond-klassifisering.mjs ← bygger draft fra to Nordnet-eksporter
 ```
