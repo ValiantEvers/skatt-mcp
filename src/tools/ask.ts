@@ -6,6 +6,7 @@ import {
   formaterKr,
   formaterKrDesimal,
   paragrafBlokk,
+  satsForbehold,
 } from "./felles.js";
 
 const PARAGRAFER_ASK: ParagrafRef[] = [
@@ -69,8 +70,9 @@ export function registerAskVerktøy(server: McpServer): void {
           .number()
           .int()
           .min(2025)
-          .max(2025)
-          .default(2025),
+          .max(2026)
+          .default(2025)
+          .describe("Rapporteringsår (2025–2026 støttet)"),
       },
     },
     async ({
@@ -102,6 +104,9 @@ export function registerAskVerktøy(server: McpServer): void {
               text: [
                 `ASK — rapporteringsår ${rapporteringsaar}`,
                 `Skjermingsrente: ${renteProsent} %`,
+                ...(satsForbehold(rapporteringsaar)
+                  ? [satsForbehold(rapporteringsaar) as string]
+                  : []),
                 ``,
                 `Tom ASK — ingen skattekonsekvens.`,
                 ``,
@@ -176,10 +181,12 @@ export function registerAskVerktøy(server: McpServer): void {
       const oppjustert = skattepliktig * oppjusteringsfaktor;
       const implisertSkatt = oppjustert * 0.22;
 
-      // Bygg output
+      // Bygg output. Forbeholdet er null for 2025, så 2025-output er byte-uendret.
+      const forbehold = satsForbehold(rapporteringsaar);
       const linjer: string[] = [
         `ASK — rapporteringsår ${rapporteringsaar}`,
         `Skjermingsrente: ${renteProsent} %`,
+        ...(forbehold ? [forbehold] : []),
         `Scenario: ${scenario}`,
         ``,
         `State ved start:`,

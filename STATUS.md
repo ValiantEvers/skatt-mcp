@@ -12,6 +12,32 @@ Per i dag har vi 7 ferdige kalkulator-domener (inntekt, formue, aksjer, ASK, fon
 
 **A2 (orkestrator) er fullført 2026-05-31** — nytt verktøy `beregn_skatteoppgjoer_nordnet` (`src/tools/skatteoppgjor.ts`) kjeder CSV → parse → per-ISIN-ruting → full skatteberegning i ett kall. Parseren (`csv-parsers/nordnet.ts`) er utvidet med `isin` per transaksjon (additivt; kolonne 7 leses nå inn) slik at automatisk ruting mot `fond-klassifisering.json` er mulig. Aksjer går til aksje-FIFO, fond til `beregnPerIsin` (gjenbrukt fra `fond.ts`). Verktøyet godtar `csv_filsti` ELLER `csv_tekst`. Utbytte/bytte/splitt rapporteres som advarsler, ikke beregnet. Verifisert med `scripts/test-skatteoppgjoer.mjs` (kombinert aksje+fond-fixture: 2 248 + 7 568 = 9 816). Eksisterende parser- og fond-identitetstester fortsatt grønne.
 
+**Årsstøtte 2026 er åpnet 2026-08-16 (v0.1.0).** `hentSatser` og `src/data/satser/2026.json`
+hadde vært klare en stund, men fem verktøy var fortsatt låst til `max(2025)` i zod-skjemaet —
+`aksjer` (begge verktøy), `ask`, `bolig`, `formue` og `krypto`. Grensene er hevet til 2026;
+**defaulten står bevisst igjen på 2025**, fordi skattemeldingen man leverer nå gjelder
+inntektsåret 2025. `hentOppjusteringsfaktor` leser nå faktoren fra årets satsfil i stedet for
+å hardkode 2025. Forbeholdet om den foreløpige 2026-skjermingsrenten (`satsForbehold`) er
+wiret inn i `aksjer` og `ask` — de eneste to av de fem som faktisk bruker skjermingsrenten;
+å sette det på bolig/formue/krypto ville vært et forbehold på tall det ikke berører.
+2025-output er uendret (forbeholdet returnerer `null` for 2025).
+
+**⚠️ Feil funnet og rettet i samme slag: primærbolig-terskelen.** `2026.json` sa 10 MNOK og
+«uendret 2025→2026», og `formue.ts` hadde grensen **hardkodet** som `10_000_000`. Riktig for
+inntektsåret 2026 er **14 MNOK** (25 % under, 70 % over) — verifisert mot Skatteetatens satsside
+for 2026. Feilkilden er sannsynlig: Prop. 1 LS (2025–2026) fra høsten 2025 hadde fortsatt 10 M,
+og hevingen kom senere. Terskelen ligger nå i satsfila (`primærbolig.terskel`), og nøklene er
+døpt om fra `verdsetting_opp_til_10M`/`_over_10M` til `_under_terskel`/`_over_terskel` — de gamle
+navnene ville vært direkte usanne for 2026. Utslag: en primærbolig til 15 MNOK ble verdsatt til
+6 000 000 der fasit er 4 200 000, altså **1,8 MNOK for høyt formuesgrunnlag**.
+Kryssjekk: `renteriket` hadde allerede 14 MNOK riktig; det var dette repoet som lå etter.
+
+**Nye golden-tester: `scripts/test-2026.mjs`** (11 stk, wiret inn i `npm test`). Alle fasiter er
+regnet for hånd fra `2026.json` med utregningen i kommentar over hver test — ikke observert
+output limt inn i etterkant. Dekker den restrukturerte formuesskatten (kommunal 0,35 %, statlig
+trinn 1 0,65 %, trinn 2 0,75 % over 21,5 MNOK, bunnfradrag 1,9/3,8 MNOK), ektefelledoblingen av
+**både** bunnfradrag og innslag, og primærbolig-terskelen i praksis.
+
 **Neste anbefalte steg: DNB-parser eller validering mot 2025-skattemelding.** Begge krever ekstern data — DNB-parser krever en eksempelfil, validering krever ferdigstilt skattemelding for inntektsåret 2025.
 
 ---
@@ -33,7 +59,7 @@ Per i dag har vi 7 ferdige kalkulator-domener (inntekt, formue, aksjer, ASK, fon
 | `src/tools/import_nordnet.ts` | `import_transaksjoner_nordnet` | UTF-16 LE TSV → kanonisk transaksjons-array |
 | `src/lib/fifo.ts` | (lib) | Domene-nøytral `kjørFifo` + `IkkeNokBeholdningFeil` + opt-in `delsalg`-output |
 | `src/lib/csv-parsers/nordnet.ts` | (lib) | `parseNordnetCsv` + `NordnetCsvFeil` |
-| `src/data/fond-klassifisering.json` | (data) | 75 entries (45 aksje, 25 aksjefond, 5 rentefond), ISIN som nøkkel |
+| `src/data/fond-klassifisering.json` | (data) | **12 entries** (8 aksjefond, 3 rentefond, 1 aksje), ISIN som nøkkel. Bevisst offentlig **seed**, ikke full dekning — repoet er public, og hvilke fond jeg eier er ikke noe som skal ligge her. Ukjent ISIN er ingen stille feil: `fond.ts` kaster med filnavnet i meldingen, så den som mangler et fond legger det inn selv (talt 2026-08-16) |
 
 17 paragrafblokker hardkodet på tvers av kalkulatorene, alle verifisert mot Lovdatas bulk-arkiv (kjørt via `lookup_paragraf` ved hardkoding).
 

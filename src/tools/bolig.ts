@@ -112,8 +112,9 @@ export function registerBoligVerktøy(server: McpServer): void {
           .number()
           .int()
           .min(2025)
-          .max(2025)
-          .default(2025),
+          .max(2026)
+          .default(2025)
+          .describe("Rapporteringsår (2025–2026 støttet)"),
       },
     },
     async ({

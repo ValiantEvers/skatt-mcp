@@ -67,10 +67,10 @@ export function registerKryptoVerktøy(server: McpServer): void {
           .number()
           .int()
           .min(2020)
-          .max(2025)
+          .max(2026)
           .default(2025)
           .describe(
-            "Rapporteringsår. Salg utenfor dette året påvirker FIFO-historikk, men ikke rapporterte totaler."
+            "Rapporteringsår (2025–2026 støttet). Salg utenfor dette året påvirker FIFO-historikk, men ikke rapporterte totaler."
           ),
       },
     },

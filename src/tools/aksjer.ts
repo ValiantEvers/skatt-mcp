@@ -1,8 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import satser2025 from "../data/satser/2025.json" with { type: "json" };
 import type { ParagrafRef } from "./lovdata.js";
-import { formaterKr, formaterKrDesimal, paragrafBlokk } from "./felles.js";
+import {
+  formaterKr,
+  formaterKrDesimal,
+  paragrafBlokk,
+  hentSatser,
+  satsForbehold,
+} from "./felles.js";
 import {
   kjørFifo,
   IkkeNokBeholdningFeil,
@@ -13,11 +18,11 @@ import {
 
 type RealisertSalg = FifoSalgsResultat & { rapportert: boolean };
 
+// Leser faktoren fra årets satsfil i stedet for å hardkode 2025. hentSatser kaster
+// selv med årstallet i meldingen for år som ikke finnes, så feilklassen er beholdt —
+// den er bare flyttet til det ene stedet som eier årsoppslag.
 function hentOppjusteringsfaktor(rapporteringsår: number): number {
-  if (rapporteringsår === 2025) return satser2025.aksjeoppjustering.faktor;
-  throw new Error(
-    `Aksjeoppjusteringsfaktor for ${rapporteringsår} er ikke implementert ennå — kun 2025 støttes`
-  );
+  return hentSatser(rapporteringsår).aksjeoppjustering.faktor;
 }
 
 const PARAGRAFER_AKSJEGEVINST: ParagrafRef[] = [
@@ -73,10 +78,10 @@ export function registerAksjeVerktøy(server: McpServer): void {
           .number()
           .int()
           .min(2020)
-          .max(2025)
+          .max(2026)
           .default(2025)
           .describe(
-            "Rapporteringsår. Salg utenfor dette året påvirker FIFO-historikk, men ikke rapporterte totaler."
+            "Rapporteringsår (satser finnes for 2025–2026). Salg utenfor dette året påvirker FIFO-historikk, men ikke rapporterte totaler."
           ),
       },
     },
@@ -168,9 +173,11 @@ export function registerAksjeVerktøy(server: McpServer): void {
       const oppjustert = netto * oppjusteringsfaktor;
       const implisertSkatt = oppjustert * 0.22;
 
-      // Bygg output
+      // Bygg output. Forbeholdet er null for 2025, så 2025-output er byte-uendret.
+      const forbehold = satsForbehold(rapporteringsaar);
       const linjer: string[] = [
         `Aksjegevinst — rapporteringsår ${rapporteringsaar}`,
+        ...(forbehold ? [forbehold] : []),
         ``,
         `Per ticker:`,
       ];
@@ -295,14 +302,15 @@ export function registerAksjeVerktøy(server: McpServer): void {
           .number()
           .int()
           .min(2025)
-          .max(2025)
-          .default(2025),
+          .max(2026)
+          .default(2025)
+          .describe("Rapporteringsår (2025–2026 støttet)"),
       },
     },
     async ({ innehav, utbytter, rapporteringsaar }) => {
-      const skjermingsrente =
-        satser2025.skjermingsrente.personlige_aksjonærer;
-      const oppjusteringsfaktor = satser2025.aksjeoppjustering.faktor;
+      const satser = hentSatser(rapporteringsaar);
+      const skjermingsrente = satser.skjermingsrente.personlige_aksjonærer;
+      const oppjusteringsfaktor = satser.aksjeoppjustering.faktor;
       const renteProsent = (skjermingsrente * 100)
         .toFixed(1)
         .replace(".", ",");
@@ -316,6 +324,9 @@ export function registerAksjeVerktøy(server: McpServer): void {
               text: [
                 `Skjermingsfradrag — rapporteringsår ${rapporteringsaar}`,
                 `Skjermingsrente: ${renteProsent} %`,
+                ...(satsForbehold(rapporteringsaar)
+                  ? [satsForbehold(rapporteringsaar) as string]
+                  : []),
                 ``,
                 `Ingen aksjebeholdning rapportert.`,
                 ``,
@@ -350,9 +361,11 @@ export function registerAksjeVerktøy(server: McpServer): void {
       let totalUtbytte = 0;
       let totalSkattepliktig = 0;
 
+      const forbehold = satsForbehold(rapporteringsaar);
       const linjer: string[] = [
         `Skjermingsfradrag — rapporteringsår ${rapporteringsaar}`,
         `Skjermingsrente: ${renteProsent} %`,
+        ...(forbehold ? [forbehold] : []),
         ``,
         `Per ticker:`,
       ];
