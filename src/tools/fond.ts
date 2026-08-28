@@ -17,8 +17,11 @@ import {
   type Lot,
 } from "../lib/fifo.js";
 
-// § 10-20 (2): aksjeandel ≥ 80 % → aksjefond
-// § 10-20 (2): aksjeandel ≤ 20 % → rentefond
+// § 10-20 (2) a: aksjeandel > 80 % → aksjefond («mer enn 80 prosent»)
+// § 10-20 (2) b: aksjeandel < 20 % → rentefond («mindre enn 20 prosent»)
+// Ulikhetene er STRENGE i lovteksten: nøyaktig 80,0 og nøyaktig 20,0 hører
+// hjemme i mellomsjiktet («mellom 20 prosent og 80 prosent»), ikke i
+// ytterkantene. Se scripts/test-fond-grenser.mjs.
 // (Mellom: kombinasjonsfond, proporsjonal splitt.)
 const AKSJEFOND_GRENSE = 0.8;
 const RENTEFOND_GRENSE = 0.2;
@@ -89,8 +92,8 @@ function hentAksjeandel(
 
 // Klassifisering av snittsaksjeandel for label (per § 10-20 (2)).
 function fondsLabel(snitt: number): "aksjefond" | "rentefond" | "kombinasjonsfond" {
-  if (snitt >= AKSJEFOND_GRENSE) return "aksjefond";
-  if (snitt <= RENTEFOND_GRENSE) return "rentefond";
+  if (snitt > AKSJEFOND_GRENSE) return "aksjefond";
+  if (snitt < RENTEFOND_GRENSE) return "rentefond";
   return "kombinasjonsfond";
 }
 

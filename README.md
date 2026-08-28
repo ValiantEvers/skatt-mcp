@@ -193,8 +193,9 @@ npm test          # bygger og kjører hele den committede testpakken
 npm run typecheck # ren type-sjekk uten å skrive filer
 ```
 
-Testpakken kjører parser-enhetstester, en MD5-frosset identitetstest for fond-motoren, det
-samlede skatteoppgjøret og en ende-til-ende-test mot syntetiske fixturer (`test-fixtures/`).
+Testpakken kjører parser-enhetstester, en MD5-frosset identitetstest for fond-motoren, en
+grensetest for aksjeandel-klassifiseringen (§ 10-20 (2), 27 sjekker), det samlede
+skatteoppgjøret og en ende-til-ende-test mot syntetiske fixturer (`test-fixtures/`).
 Ingen ekte data kreves.
 
 ---
