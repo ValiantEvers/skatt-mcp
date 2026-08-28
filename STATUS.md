@@ -124,9 +124,12 @@ skatt-mcp/
     ├── identity-test-fond.mjs         ← MD5-regresjonstest mot frosset baseline
     ├── identity-test-aksjer.mjs       ← før/etter-snapshot ved aksjer-refaktorering
     ├── test-nordnet-parser.mjs        ← unit-tester mot fixturer
+    ├── test-fond-grenser.mjs          ← aksjeandel-grensene, § 10-20 (2) strenge ulikheter
+    ├── test-skatteoppgjoer.mjs        ← samlet skatteoppgjør
     ├── test-nordnet-e2e.mjs           ← parser → calculate_aksjegevinst, ekte fil
     ├── test-krypto.mjs                ← krypto-aksept-test
     ├── test-formue-ektefeller.mjs     ← 4 golden-tester, ektefellers doble beløpsgrenser
+    ├── test-2026.mjs                  ← golden-tester for 2026-satsene
     ├── fetch-paragraf.mjs             ← én-shot lookup_paragraf via MCP
     └── generate-fond-klassifisering.mjs ← bygger draft fra to Nordnet-eksporter
 ```
@@ -143,6 +146,11 @@ skatt-mcp/
 
 - **Test-skripter:**
   - `scripts/test-nordnet-parser.mjs` — unit-tester mot fixturer
+  - `scripts/test-fond-grenser.mjs` — 27 grensesjekker for aksjeandel-klassifiseringen
+    (skatteloven § 10-20 (2): «mer enn 80 prosent» / «mindre enn 20 prosent» er STRENGE
+    ulikheter, så nøyaktig 80,0 og 20,0 hører hjemme i mellomsjiktet)
+  - `scripts/test-skatteoppgjoer.mjs` — det samlede skatteoppgjøret
+  - `scripts/test-2026.mjs` — golden-tester for 2026-satsene
   - `scripts/test-nordnet-e2e.mjs` — fixture 1 → `calculate_aksjegevinst` + parse av ekte fil
   - `scripts/identity-test-aksjer.mjs` — før/etter-snapshot ved aksjer-refaktorering (md5)
   - `scripts/identity-test-fond.mjs` — fond-fixturer mot frosset MD5-baseline (2026-05-10)
